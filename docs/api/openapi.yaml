@@ -1,0 +1,554 @@
+openapi: 3.1.0
+info:
+  title: AI English Mentor API
+  version: 1.0.0
+  description: Public REST and SSE bootstrap contract for web and Android V1.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - { name: Auth }
+  - { name: Privacy }
+  - { name: Learner }
+  - { name: Conversation }
+  - { name: Learning }
+  - { name: Speech }
+  - { name: Billing }
+  - { name: Moderation }
+  - { name: Devices }
+  - { name: Admin }
+
+paths:
+  /health/live:
+    get:
+      operationId: getLiveness
+      security: []
+      responses:
+        '200': { description: Alive, content: { application/json: { schema: { $ref: '#/components/schemas/Health' } } } }
+  /config/public:
+    get:
+      operationId: getPublicConfig
+      security: []
+      responses:
+        '200': { description: Public client configuration, content: { application/json: { schema: { $ref: '#/components/schemas/PublicConfig' } } } }
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RegisterRequest' } } } }
+      responses:
+        '201': { description: Account created, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResult' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } } }
+      responses:
+        '200': { description: Authenticated, headers: { Set-Cookie: { schema: { type: string } } }, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshSession
+      security: []
+      responses:
+        '200': { description: Token rotated, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      responses:
+        '204': { description: Session revoked }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /me:
+    get:
+      operationId: getMe
+      responses:
+        '200': { description: Current account, content: { application/json: { schema: { $ref: '#/components/schemas/Me' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      operationId: updateMe
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UpdateMeRequest' } } } }
+      responses:
+        '200': { description: Updated account, content: { application/json: { schema: { $ref: '#/components/schemas/Me' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/consents:
+    get:
+      tags: [Privacy]
+      operationId: listConsents
+      responses:
+        '200': { description: Current consent states, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Consent' } } } } }
+  /me/consents/{type}:
+    put:
+      tags: [Privacy]
+      operationId: setConsent
+      parameters: [{ name: type, in: path, required: true, schema: { $ref: '#/components/schemas/ConsentType' } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SetConsentRequest' } } } }
+      responses:
+        '200': { description: Consent recorded, content: { application/json: { schema: { $ref: '#/components/schemas/Consent' } } } }
+  /me/privacy-requests:
+    post:
+      tags: [Privacy]
+      operationId: createPrivacyRequest
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreatePrivacyRequest' } } } }
+      responses:
+        '202': { description: Request accepted, content: { application/json: { schema: { $ref: '#/components/schemas/AsyncOperation' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/privacy-requests/{requestId}:
+    get:
+      tags: [Privacy]
+      operationId: getPrivacyRequest
+      parameters: [{ $ref: '#/components/parameters/RequestId' }]
+      responses:
+        '200': { description: Privacy request, content: { application/json: { schema: { $ref: '#/components/schemas/PrivacyRequest' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /learner-profile:
+    get:
+      tags: [Learner]
+      operationId: getLearnerProfile
+      responses:
+        '200': { description: Learner profile, content: { application/json: { schema: { $ref: '#/components/schemas/LearnerProfile' } } } }
+    put:
+      tags: [Learner]
+      operationId: putLearnerProfile
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UpdateLearnerProfile' } } } }
+      responses:
+        '200': { description: Updated learner profile, content: { application/json: { schema: { $ref: '#/components/schemas/LearnerProfile' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /learner-profile/memories:
+    get:
+      tags: [Learner]
+      operationId: listLearnerMemories
+      responses:
+        '200': { description: User-visible memories, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LearnerMemory' } } } } }
+  /learner-profile/memories/{memoryId}:
+    delete:
+      tags: [Learner]
+      operationId: deleteLearnerMemory
+      parameters: [{ name: memoryId, in: path, required: true, schema: { $ref: '#/components/schemas/Uuid' } }]
+      responses:
+        '204': { description: Memory deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /scenarios:
+    get:
+      tags: [Conversation]
+      operationId: listScenarios
+      parameters:
+        - { name: level, in: query, schema: { $ref: '#/components/schemas/CefrLevel' } }
+        - { name: mode, in: query, schema: { enum: [TEXT, VOICE, MIXED] } }
+      responses:
+        '200': { description: Available scenarios, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Scenario' } } } } }
+  /conversations:
+    get:
+      tags: [Conversation]
+      operationId: listConversations
+      parameters: [{ $ref: '#/components/parameters/After' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Conversation page, content: { application/json: { schema: { $ref: '#/components/schemas/ConversationPage' } } } }
+    post:
+      tags: [Conversation]
+      operationId: createConversation
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateConversation' } } } }
+      responses:
+        '201': { description: Created session, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /conversations/{sessionId}:
+    get:
+      tags: [Conversation]
+      operationId: getConversation
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { description: Conversation state, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Conversation]
+      operationId: deleteConversation
+      parameters: [{ $ref: '#/components/parameters/SessionId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '202': { description: Deletion accepted, content: { application/json: { schema: { $ref: '#/components/schemas/AsyncOperation' } } } }
+  /conversations/{sessionId}/turns:
+    post:
+      tags: [Conversation]
+      operationId: submitConversationTurn
+      parameters: [{ $ref: '#/components/parameters/SessionId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubmitTurn' } } } }
+      responses:
+        '202': { description: Turn accepted, content: { application/json: { schema: { $ref: '#/components/schemas/StreamOperation' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /conversations/{sessionId}/finish:
+    post:
+      tags: [Conversation]
+      operationId: finishConversation
+      parameters: [{ $ref: '#/components/parameters/SessionId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '202': { description: Feedback finalization accepted, content: { application/json: { schema: { $ref: '#/components/schemas/AsyncOperation' } } } }
+  /conversations/{sessionId}/feedback:
+    get:
+      tags: [Conversation]
+      operationId: getConversationFeedback
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { description: Feedback, content: { application/json: { schema: { $ref: '#/components/schemas/Feedback' } } } }
+        '202': { description: Still processing, content: { application/json: { schema: { $ref: '#/components/schemas/AsyncOperation' } } } }
+  /learning-plans/current:
+    get:
+      tags: [Learning]
+      operationId: getCurrentLearningPlan
+      responses:
+        '200': { description: Current plan, content: { application/json: { schema: { $ref: '#/components/schemas/LearningPlan' } } } }
+  /review/queue:
+    get:
+      tags: [Learning]
+      operationId: getReviewQueue
+      parameters: [{ name: budgetMinutes, in: query, schema: { type: integer, minimum: 1, maximum: 60 } }]
+      responses:
+        '200': { description: Due review items, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ReviewItem' } } } } }
+  /review/attempts:
+    post:
+      tags: [Learning]
+      operationId: submitReviewAttempt
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReviewAttempt' } } } }
+      responses:
+        '201': { description: Attempt recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ReviewResult' } } } }
+  /progress/summary:
+    get:
+      tags: [Learning]
+      operationId: getProgressSummary
+      responses:
+        '200': { description: Stable progress summary, content: { application/json: { schema: { $ref: '#/components/schemas/ProgressSummary' } } } }
+  /speech/uploads:
+    post:
+      tags: [Speech]
+      operationId: createSpeechUpload
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateSpeechUpload' } } } }
+      responses:
+        '201': { description: Presigned upload, content: { application/json: { schema: { $ref: '#/components/schemas/SpeechUpload' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /speech/uploads/{assetId}/complete:
+    post:
+      tags: [Speech]
+      operationId: completeSpeechUpload
+      parameters: [{ name: assetId, in: path, required: true, schema: { $ref: '#/components/schemas/Uuid' } }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [checksumSha256], properties: { checksumSha256: { type: string, pattern: '^[a-f0-9]{64}$' } } } } } }
+      responses:
+        '202': { description: Asset verification accepted, content: { application/json: { schema: { $ref: '#/components/schemas/AsyncOperation' } } } }
+  /speech/realtime-tokens:
+    post:
+      tags: [Speech]
+      operationId: createSpeechRealtimeToken
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [sessionId], properties: { sessionId: { $ref: '#/components/schemas/Uuid' } } } } } }
+      responses:
+        '201': { description: One-time WebSocket token, content: { application/json: { schema: { $ref: '#/components/schemas/RealtimeToken' } } } }
+  /billing/catalog:
+    get:
+      tags: [Billing]
+      operationId: getBillingCatalog
+      responses:
+        '200': { description: Regional product catalog, content: { application/json: { schema: { $ref: '#/components/schemas/BillingCatalog' } } } }
+  /billing/entitlements:
+    get:
+      tags: [Billing]
+      operationId: getEntitlements
+      responses:
+        '200': { description: Product rights, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Entitlement' } } } } }
+  /billing/google-play/purchases/verify:
+    post:
+      tags: [Billing]
+      operationId: verifyGooglePlayPurchase
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GooglePlayPurchase' } } } }
+      responses:
+        '200': { description: Verified subscription, content: { application/json: { schema: { $ref: '#/components/schemas/Subscription' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /moderation/reports:
+    post:
+      tags: [Moderation]
+      operationId: createModerationReport
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CreateModerationReport' } } } }
+      responses:
+        '201': { description: Report accepted, content: { application/json: { schema: { $ref: '#/components/schemas/ModerationReport' } } } }
+  /devices:
+    post:
+      tags: [Devices]
+      operationId: registerDevice
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RegisterDevice' } } } }
+      responses:
+        '201': { description: Device registered, content: { application/json: { schema: { $ref: '#/components/schemas/Device' } } } }
+  /webhooks/stripe:
+    post:
+      tags: [Billing]
+      operationId: receiveStripeWebhook
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses:
+        '202': { description: Durably accepted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /webhooks/google-play:
+    post:
+      tags: [Billing]
+      operationId: receiveGooglePlayRtdn
+      security: [{ googleOidc: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses:
+        '202': { description: Durably accepted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /streams/{streamId}:
+    get:
+      tags: [Conversation]
+      operationId: streamOperation
+      parameters:
+        - { name: streamId, in: path, required: true, schema: { $ref: '#/components/schemas/Uuid' } }
+        - { name: Last-Event-ID, in: header, schema: { type: string } }
+      responses:
+        '200':
+          description: Server-sent event stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+    googleOidc: { type: openIdConnect, openIdConnectUrl: 'https://accounts.google.com/.well-known/openid-configuration' }
+  parameters:
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 16, maxLength: 160 } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    After: { name: after, in: query, schema: { type: string, maxLength: 1024 } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    SessionId: { name: sessionId, in: path, required: true, schema: { $ref: '#/components/schemas/Uuid' } }
+    RequestId: { name: requestId, in: path, required: true, schema: { $ref: '#/components/schemas/Uuid' } }
+  responses:
+    Unauthorized: { description: Authentication required, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Forbidden: { description: Operation forbidden, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    NotFound: { description: Resource not found, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Conflict: { description: State or idempotency conflict, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    ValidationError: { description: Semantic validation failed, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    RateLimited:
+      description: Rate or quota exceeded
+      headers: { Retry-After: { schema: { type: integer } } }
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+  schemas:
+    Uuid: { type: string, format: uuid }
+    CefrLevel: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+    ConsentType: { type: string, enum: [TERMS, PRIVACY, PERSONALIZATION, ANALYTICS, AI_PROCESSING, AUDIO_RETENTION, MODEL_IMPROVEMENT, MARKETING] }
+    Health:
+      type: object
+      required: [status]
+      properties: { status: { const: ok } }
+    PublicConfig:
+      type: object
+      required: [apiVersion, minimumSupportedAndroidVersionCode, maintenance]
+      properties:
+        apiVersion: { const: v1 }
+        minimumSupportedAndroidVersionCode: { type: integer, minimum: 1 }
+        maintenance: { type: boolean }
+        supportedLocales: { type: array, items: { type: string } }
+    Problem:
+      type: object
+      required: [type, title, status, code, correlationId]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        instance: { type: string }
+        correlationId: { $ref: '#/components/schemas/Uuid' }
+        errors: { type: array, items: { type: object, required: [path, code], properties: { path: { type: string }, code: { type: string } } } }
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password, acceptedTermsVersion, acceptedPrivacyVersion]
+      properties:
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string, minLength: 12, maxLength: 128 }
+        acceptedTermsVersion: { type: string, maxLength: 40 }
+        acceptedPrivacyVersion: { type: string, maxLength: 40 }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties: { email: { type: string, format: email }, password: { type: string }, totpCode: { type: string, pattern: '^\d{6}$' } }
+    AuthResult:
+      type: object
+      required: [accessToken, expiresIn, user]
+      properties: { accessToken: { type: string }, expiresIn: { type: integer }, user: { $ref: '#/components/schemas/Me' } }
+    Me:
+      type: object
+      required: [id, status, locale, timeZone, roles, version]
+      properties:
+        id: { $ref: '#/components/schemas/Uuid' }
+        email: { type: [string, 'null'], format: email }
+        status: { enum: [PENDING, ACTIVE, SUSPENDED, DELETION_PENDING, DELETED] }
+        locale: { type: string }
+        timeZone: { type: string }
+        roles: { type: array, items: { type: string } }
+        onboardingCompleted: { type: boolean }
+        version: { type: integer }
+    UpdateMeRequest:
+      type: object
+      additionalProperties: false
+      properties: { locale: { type: string }, timeZone: { type: string } }
+    Consent:
+      type: object
+      required: [type, policyVersion, granted, recordedAt]
+      properties: { type: { $ref: '#/components/schemas/ConsentType' }, policyVersion: { type: string }, granted: { type: boolean }, recordedAt: { type: string, format: date-time } }
+    SetConsentRequest:
+      type: object
+      additionalProperties: false
+      required: [granted, policyVersion]
+      properties: { granted: { type: boolean }, policyVersion: { type: string, maxLength: 40 } }
+    CreatePrivacyRequest:
+      type: object
+      additionalProperties: false
+      required: [type]
+      properties: { type: { enum: [EXPORT, DELETE_ACCOUNT, DELETE_CONTENT, RECTIFY, RESTRICT_PROCESSING] } }
+    PrivacyRequest:
+      type: object
+      required: [id, type, status, requestedAt]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, type: { type: string }, status: { type: string }, requestedAt: { type: string, format: date-time }, completedAt: { type: [string, 'null'], format: date-time } }
+    LearnerProfile:
+      type: object
+      required: [nativeLanguage, explanationLanguage, weeklyMinutes, mentorStyle, correctionIntensity, version]
+      properties:
+        nativeLanguage: { type: string }
+        explanationLanguage: { type: string }
+        selfAssessedLevel: { oneOf: [{ $ref: '#/components/schemas/CefrLevel' }, { type: 'null' }] }
+        currentLevel: { oneOf: [{ $ref: '#/components/schemas/CefrLevel' }, { type: 'null' }] }
+        weeklyMinutes: { type: integer, minimum: 10, maximum: 840 }
+        mentorStyle: { enum: [supportive, neutral, demanding] }
+        correctionIntensity: { type: integer, minimum: 1, maximum: 3 }
+        interests: { type: array, maxItems: 20, items: { type: string, maxLength: 80 } }
+        occupation: { type: [string, 'null'], maxLength: 160 }
+        version: { type: integer }
+    UpdateLearnerProfile: { $ref: '#/components/schemas/LearnerProfile' }
+    LearnerMemory:
+      type: object
+      required: [id, type, status, key, value, origin, version]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, type: { type: string }, status: { type: string }, key: { type: string }, value: { type: string }, origin: { type: string }, confidence: { type: [number, 'null'], minimum: 0, maximum: 1 }, version: { type: integer } }
+    Scenario:
+      type: object
+      required: [id, slug, version, title, description, supportedLevels, supportedModes]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, slug: { type: string }, version: { type: integer }, title: { type: string }, description: { type: string }, supportedLevels: { type: array, items: { $ref: '#/components/schemas/CefrLevel' } }, supportedModes: { type: array, items: { enum: [TEXT, VOICE, MIXED] } } }
+    CreateConversation:
+      type: object
+      additionalProperties: false
+      required: [scenarioId, mode]
+      properties: { scenarioId: { $ref: '#/components/schemas/Uuid' }, mode: { enum: [TEXT, VOICE, MIXED] }, planActivityId: { oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }] } }
+    Conversation:
+      type: object
+      required: [id, scenarioId, mode, status, targetLevel, version, createdAt]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, scenarioId: { $ref: '#/components/schemas/Uuid' }, mode: { type: string }, status: { type: string }, targetLevel: { $ref: '#/components/schemas/CefrLevel' }, version: { type: integer }, createdAt: { type: string, format: date-time } }
+    ConversationPage:
+      type: object
+      required: [items, pageInfo]
+      properties: { items: { type: array, items: { $ref: '#/components/schemas/Conversation' } }, pageInfo: { $ref: '#/components/schemas/PageInfo' } }
+    PageInfo:
+      type: object
+      required: [hasNextPage]
+      properties: { nextCursor: { type: [string, 'null'] }, hasNextPage: { type: boolean } }
+    SubmitTurn:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties: { content: { type: string, minLength: 1, maxLength: 8000 }, clientSequence: { type: integer, minimum: 1 } }
+    Feedback:
+      type: object
+      required: [sessionId, status, priorities]
+      properties: { sessionId: { $ref: '#/components/schemas/Uuid' }, status: { enum: [COMPLETED, LOW_CONFIDENCE] }, priorities: { type: array, maxItems: 3, items: { type: object, additionalProperties: true } }, confidence: { type: number, minimum: 0, maximum: 1 } }
+    LearningPlan:
+      type: object
+      required: [id, periodStart, periodEnd, dailyBudgetMinutes, activities, version]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, periodStart: { type: string, format: date }, periodEnd: { type: string, format: date }, dailyBudgetMinutes: { type: integer }, activities: { type: array, items: { type: object, additionalProperties: true } }, version: { type: integer } }
+    ReviewItem:
+      type: object
+      required: [id, type, prompt, dueAt]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, type: { type: string }, prompt: { type: string }, dueAt: { type: string, format: date-time } }
+    ReviewAttempt:
+      type: object
+      additionalProperties: false
+      required: [learningItemId, rating]
+      properties: { learningItemId: { $ref: '#/components/schemas/Uuid' }, rating: { enum: [AGAIN, HARD, GOOD, EASY] }, response: { type: [string, 'null'], maxLength: 8000 }, responseTimeMs: { type: integer, minimum: 0 } }
+    ReviewResult:
+      type: object
+      required: [attemptId, nextDueAt, state]
+      properties: { attemptId: { $ref: '#/components/schemas/Uuid' }, nextDueAt: { type: string, format: date-time }, state: { type: string } }
+    ProgressSummary:
+      type: object
+      required: [currentLevel, streakDays, weeklySessions, competencies]
+      properties: { currentLevel: { $ref: '#/components/schemas/CefrLevel' }, streakDays: { type: integer }, weeklySessions: { type: integer }, competencies: { type: array, items: { type: object, additionalProperties: true } } }
+    CreateSpeechUpload:
+      type: object
+      additionalProperties: false
+      required: [sessionId, mimeType, sizeBytes, checksumSha256]
+      properties: { sessionId: { $ref: '#/components/schemas/Uuid' }, mimeType: { enum: [audio/webm, audio/ogg, audio/mp4, audio/wav] }, sizeBytes: { type: integer, minimum: 1, maximum: 52428800 }, checksumSha256: { type: string, pattern: '^[a-f0-9]{64}$' }, retainForAnalysis: { type: boolean, default: false } }
+    SpeechUpload:
+      type: object
+      required: [assetId, uploadUrl, expiresAt, requiredHeaders]
+      properties: { assetId: { $ref: '#/components/schemas/Uuid' }, uploadUrl: { type: string, format: uri }, expiresAt: { type: string, format: date-time }, requiredHeaders: { type: object, additionalProperties: { type: string } } }
+    RealtimeToken:
+      type: object
+      required: [token, websocketUrl, expiresAt, subprotocol]
+      properties: { token: { type: string }, websocketUrl: { type: string, format: uri }, expiresAt: { type: string, format: date-time }, subprotocol: { const: mentor.voice.v1 } }
+    BillingCatalog:
+      type: object
+      required: [countryCode, currency, products]
+      properties: { countryCode: { type: string, minLength: 2, maxLength: 2 }, currency: { type: string, minLength: 3, maxLength: 3 }, products: { type: array, items: { type: object, additionalProperties: true } } }
+    Entitlement:
+      type: object
+      required: [key, status, validFrom]
+      properties: { key: { type: string }, status: { enum: [ACTIVE, GRACE, REVOKED, EXPIRED] }, validFrom: { type: string, format: date-time }, validUntil: { type: [string, 'null'], format: date-time } }
+    GooglePlayPurchase:
+      type: object
+      additionalProperties: false
+      required: [productId, purchaseToken, packageName]
+      properties: { productId: { type: string, maxLength: 160 }, purchaseToken: { type: string, minLength: 16, maxLength: 4096 }, packageName: { type: string, pattern: '^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$' } }
+    Subscription:
+      type: object
+      required: [id, provider, productKey, status]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, provider: { enum: [STRIPE, GOOGLE_PLAY] }, productKey: { type: string }, status: { type: string }, currentPeriodEnd: { type: [string, 'null'], format: date-time } }
+    CreateModerationReport:
+      type: object
+      additionalProperties: false
+      required: [turnId, reason]
+      properties: { turnId: { $ref: '#/components/schemas/Uuid' }, reason: { enum: [OFFENSIVE, SEXUAL, VIOLENCE, HATE, CHILD_SAFETY, ILLEGAL, SELF_HARM, DECEPTIVE, PRIVACY, INCORRECT_FEEDBACK, OTHER] }, comment: { type: [string, 'null'], maxLength: 2000 } }
+    ModerationReport:
+      type: object
+      required: [id, reason, status, createdAt]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, reason: { type: string }, status: { type: string }, createdAt: { type: string, format: date-time } }
+    RegisterDevice:
+      type: object
+      additionalProperties: false
+      required: [installationId, platform, appVersionCode, osApiLevel]
+      properties: { installationId: { $ref: '#/components/schemas/Uuid' }, platform: { const: ANDROID }, pushToken: { type: [string, 'null'], maxLength: 4096 }, appVersionCode: { type: integer, minimum: 1 }, osApiLevel: { type: integer, minimum: 1 }, locale: { type: string } }
+    Device:
+      type: object
+      required: [id, installationId, platform, lastSeenAt]
+      properties: { id: { $ref: '#/components/schemas/Uuid' }, installationId: { $ref: '#/components/schemas/Uuid' }, platform: { type: string }, lastSeenAt: { type: string, format: date-time } }
+    AsyncOperation:
+      type: object
+      required: [operationId, status]
+      properties: { operationId: { $ref: '#/components/schemas/Uuid' }, status: { enum: [PENDING, PROCESSING, COMPLETED, FAILED] }, statusUrl: { type: string } }
+    StreamOperation:
+      allOf:
+        - { $ref: '#/components/schemas/AsyncOperation' }
+        - type: object
+          required: [streamId, streamUrl, turnId]
+          properties: { streamId: { $ref: '#/components/schemas/Uuid' }, streamUrl: { type: string }, turnId: { $ref: '#/components/schemas/Uuid' } }

@@ -1,0 +1,1214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETION_PENDING
+  DELETED
+}
+enum SystemRole {
+  USER
+  SUPPORT
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+enum TokenPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+  MAGIC_LINK
+}
+enum ConsentType {
+  TERMS
+  PRIVACY
+  PERSONALIZATION
+  ANALYTICS
+  AI_PROCESSING
+  AUDIO_RETENTION
+  MODEL_IMPROVEMENT
+  MARKETING
+}
+enum PrivacyRequestType {
+  EXPORT
+  DELETE_ACCOUNT
+  DELETE_CONTENT
+  RECTIFY
+  RESTRICT_PROCESSING
+}
+enum RequestStatus {
+  PENDING
+  VERIFYING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  CANCELLED
+  FAILED
+}
+enum DataOrigin {
+  USER_DECLARED
+  OBSERVED
+  AI_INFERRED
+  SYSTEM_DERIVED
+}
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+enum SkillType {
+  SPEAKING
+  LISTENING
+  READING
+  WRITING
+  GRAMMAR
+  VOCABULARY
+  PRONUNCIATION
+  FLUENCY
+  INTERACTION
+  FUNCTIONAL
+}
+enum MemoryType {
+  FACT
+  PREFERENCE
+  INTEREST
+  GOAL
+  CONTEXT
+  SUMMARY
+}
+enum MemoryStatus {
+  CANDIDATE
+  ACTIVE
+  REJECTED
+  EXPIRED
+  DELETED
+}
+enum ScenarioStatus {
+  DRAFT
+  REVIEW
+  ACTIVE
+  ARCHIVED
+}
+enum SessionMode {
+  TEXT
+  VOICE
+  MIXED
+}
+enum ConversationStatus {
+  CREATED
+  ACTIVE
+  FINALIZING
+  COMPLETED
+  ABANDONED
+  FAILED
+  DELETED
+}
+enum ActorType {
+  USER
+  MENTOR
+  SYSTEM
+  TOOL
+}
+enum TurnStatus {
+  RECEIVED
+  STREAMING
+  COMPLETED
+  FAILED
+  CANCELLED
+  MODERATED
+}
+enum AssessmentType {
+  DIAGNOSTIC
+  SESSION_FEEDBACK
+  CONTROL_SAMPLE
+  WRITING
+  PRONUNCIATION
+  REVIEW
+}
+enum AssessmentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  LOW_CONFIDENCE
+  FAILED
+  INVALIDATED
+}
+enum ErrorCategory {
+  GRAMMAR
+  VOCABULARY
+  WORD_ORDER
+  AGREEMENT
+  TENSE
+  ARTICLE
+  PREPOSITION
+  PRONUNCIATION
+  FLUENCY
+  REGISTER
+  NATURALNESS
+  COMPREHENSION
+  TASK_FULFILLMENT
+  OTHER
+}
+enum MasteryState {
+  NEW
+  LEARNING
+  REVIEWING
+  STABLE
+  LAPSED
+}
+enum LearningItemType {
+  PHRASE
+  COLLOCATION
+  GRAMMAR_PATTERN
+  PRONUNCIATION_PATTERN
+  FUNCTIONAL_SKILL
+  ERROR_PATTERN
+}
+enum ReviewRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  REPLACED
+  CANCELLED
+}
+enum ActivityType {
+  CONVERSATION
+  REVIEW
+  PRONUNCIATION
+  DIAGNOSTIC
+  GRAMMAR
+  WRITING
+  READING
+  LISTENING
+}
+enum ActivityStatus {
+  PLANNED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  REPLACED
+  EXPIRED
+}
+enum SpeechAssetStatus {
+  UPLOADING
+  READY
+  QUARANTINED
+  PROCESSING
+  PROCESSED
+  DELETED
+  FAILED
+}
+enum AiTaskStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REJECTED
+}
+enum AiProvider {
+  OPENAI
+  ANTHROPIC
+  GEMINI
+  OPENROUTER
+  LOCAL
+}
+enum ModerationDecision {
+  ALLOW
+  BLOCK
+  SAFE_COMPLETE
+  REVIEW
+}
+enum ModerationStatus {
+  OPEN
+  TRIAGED
+  ACTIONED
+  DISMISSED
+  ESCALATED
+}
+enum ReportReason {
+  OFFENSIVE
+  SEXUAL
+  VIOLENCE
+  HATE
+  CHILD_SAFETY
+  ILLEGAL
+  SELF_HARM
+  DECEPTIVE
+  PRIVACY
+  INCORRECT_FEEDBACK
+  OTHER
+}
+enum SubscriptionProvider {
+  STRIPE
+  GOOGLE_PLAY
+}
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  GRACE_PERIOD
+  ON_HOLD
+  PAUSED
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+  REVOKED
+}
+enum EntitlementStatus {
+  ACTIVE
+  GRACE
+  REVOKED
+  EXPIRED
+}
+enum PurchasePlatform {
+  WEB
+  ANDROID
+}
+enum BillingEventStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  FAILED
+}
+enum UsageUnit {
+  AI_INPUT_TOKEN
+  AI_OUTPUT_TOKEN
+  VOICE_SECOND
+  STT_SECOND
+  TTS_CHARACTER
+  STORAGE_BYTE
+  SESSION
+}
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  IN_APP
+}
+enum NotificationStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+enum JobStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  DEAD_LETTER
+}
+model User {
+  id                  String       @id @default(uuid()) @db.Uuid
+  email               String?      @db.VarChar(320)
+  emailNormalized     String?      @unique @map("email_normalized") @db.VarChar(320)
+  passwordHash        String?      @map("password_hash") @db.VarChar(255)
+  status              UserStatus   @default(PENDING)
+  locale              String       @default("pl-PL") @db.VarChar(35)
+  timeZone            String       @default("Europe/Warsaw") @map("time_zone") @db.VarChar(64)
+  emailVerifiedAt     DateTime?    @map("email_verified_at") @db.Timestamptz(3)
+  lastSignedInAt      DateTime?    @map("last_signed_in_at") @db.Timestamptz(3)
+  deletionRequestedAt DateTime?    @map("deletion_requested_at") @db.Timestamptz(3)
+  deletedAt           DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version             Int          @default(1)
+  identities          AuthIdentity[]
+  sessions            AuthSession[]
+  roles               UserRole[]
+  tokens              OneTimeToken[]
+  totp                 TotpCredential?
+  recoveryCodes       RecoveryCode[]
+  consents             ConsentRecord[]
+  privacyRequests      PrivacyRequest[]
+  profile              LearnerProfile?
+  goals                LearnerGoal[]
+  competencies         LearnerCompetency[]
+  memories             LearnerMemory[]
+  conversations        ConversationSession[]
+  assessments          Assessment[]
+  observations         LearnerObservation[]
+  learningItems        LearningItem[]
+  reviewAttempts       ReviewAttempt[]
+  vocabularyEntries    VocabularyEntry[]
+  plans                LearningPlan[]
+  speechAssets         SpeechAsset[]
+  aiRuns               AiRun[]
+  subscriptions        Subscription[]
+  entitlements         Entitlement[]
+  usageEntries         UsageLedger[]
+  moderationReports    ModerationReport[]
+  notifications        Notification[]
+  devices              UserDevice[]
+  streak               UserStreak?
+  xpEntries            XpLedger[]
+
+  @@index([status, createdAt])
+  @@map("users")
+}
+
+model AuthIdentity {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  provider       String   @db.VarChar(32)
+  providerUserId String   @map("provider_user_id") @db.VarChar(255)
+  emailAtProvider String? @map("email_at_provider") @db.VarChar(320)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("auth_identities")
+}
+
+model AuthSession {
+  id                   String    @id @default(uuid()) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  refreshTokenHash     String    @unique @map("refresh_token_hash") @db.VarChar(255)
+  tokenFamilyId        String    @map("token_family_id") @db.Uuid
+  replacedBySessionId  String?   @map("replaced_by_session_id") @db.Uuid
+  deviceName           String?   @map("device_name") @db.VarChar(120)
+  userAgentHash        String?   @map("user_agent_hash") @db.VarChar(128)
+  ipPrefixEncrypted    Bytes?    @map("ip_prefix_encrypted")
+  expiresAt            DateTime  @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt           DateTime? @map("last_used_at") @db.Timestamptz(3)
+  revokedAt            DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokeReason         String?   @map("revoke_reason") @db.VarChar(64)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([tokenFamilyId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+}
+
+model UserRole {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  role      SystemRole
+  grantedBy String?    @map("granted_by") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([role])
+  @@map("user_roles")
+}
+
+model OneTimeToken {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  purpose   TokenPurpose
+  tokenHash String       @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime     @map("expires_at") @db.Timestamptz(3)
+  consumedAt DateTime?   @map("consumed_at") @db.Timestamptz(3)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, expiresAt])
+  @@map("one_time_tokens")
+}
+
+model TotpCredential {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  secretEncrypted Bytes     @map("secret_encrypted")
+  enabledAt       DateTime? @map("enabled_at") @db.Timestamptz(3)
+  lastUsedStep    BigInt?   @map("last_used_step")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("totp_credentials")
+}
+
+model RecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @unique @map("code_hash") @db.VarChar(255)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+  @@map("recovery_codes")
+}
+
+model ConsentRecord {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @map("user_id") @db.Uuid
+  type          ConsentType
+  policyVersion String      @map("policy_version") @db.VarChar(40)
+  granted       Boolean
+  source        String      @db.VarChar(32)
+  jurisdiction  String?     @db.VarChar(8)
+  recordedAt    DateTime    @default(now()) @map("recorded_at") @db.Timestamptz(3)
+  withdrawnAt   DateTime?   @map("withdrawn_at") @db.Timestamptz(3)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, recordedAt(sort: Desc)])
+  @@map("consent_records")
+}
+
+model PrivacyRequest {
+  id              String             @id @default(uuid()) @db.Uuid
+  userId          String             @map("user_id") @db.Uuid
+  type            PrivacyRequestType
+  status          RequestStatus      @default(PENDING)
+  verificationHash String?           @map("verification_hash") @db.VarChar(255)
+  requestedAt     DateTime           @default(now()) @map("requested_at") @db.Timestamptz(3)
+  verifiedAt      DateTime?          @map("verified_at") @db.Timestamptz(3)
+  completedAt     DateTime?          @map("completed_at") @db.Timestamptz(3)
+  exportObjectKey String?            @map("export_object_key") @db.VarChar(1024)
+  failureCode     String?            @map("failure_code") @db.VarChar(80)
+  manifest        Json?
+  user            User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, requestedAt(sort: Desc)])
+  @@index([status, requestedAt])
+  @@map("privacy_requests")
+}
+
+model LearnerProfile {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @unique @map("user_id") @db.Uuid
+  nativeLanguage      String    @map("native_language") @db.VarChar(35)
+  explanationLanguage String    @map("explanation_language") @db.VarChar(35)
+  selfAssessedLevel   CefrLevel? @map("self_assessed_level")
+  currentLevel        CefrLevel? @map("current_level")
+  englishLevel        CefrLevel? @map("english_level")
+  germanLevel         CefrLevel? @map("german_level")
+  weeklyMinutes       Int       @default(75) @map("weekly_minutes")
+  englishWeeklyMinutes Int       @default(75) @map("english_weekly_minutes")
+  germanWeeklyMinutes  Int       @default(75) @map("german_weekly_minutes")
+  correctionIntensity Int       @default(2) @map("correction_intensity") @db.SmallInt
+  mentorStyle         String    @default("supportive") @map("mentor_style") @db.VarChar(32)
+  interests           String[]  @default([])
+  occupation          String?   @db.VarChar(160)
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at") @db.Timestamptz(3)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version             Int       @default(1)
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learner_profiles")
+}
+
+model LearnerGoal {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  title       String    @db.VarChar(160)
+  description String?   @db.Text
+  targetDate  DateTime? @map("target_date") @db.Date
+  priority    Int       @default(1) @db.SmallInt
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active, priority])
+  @@map("learner_goals")
+}
+
+model LearnerCompetency {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  skill           SkillType
+  skillKey        String       @map("skill_key") @db.VarChar(120)
+  level           CefrLevel?
+  score           Decimal      @db.Decimal(6, 4)
+  confidence      Decimal      @db.Decimal(5, 4)
+  observationCount Int         @default(0) @map("observation_count")
+  algorithmVersion String      @map("algorithm_version") @db.VarChar(40)
+  lastObservedAt  DateTime?    @map("last_observed_at") @db.Timestamptz(3)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version         Int          @default(1)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skill, skillKey])
+  @@index([userId, score])
+  @@map("learner_competencies")
+}
+
+model LearnerMemory {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  type           MemoryType
+  status         MemoryStatus @default(CANDIDATE)
+  key            String       @db.VarChar(120)
+  valueEncrypted Bytes        @map("value_encrypted")
+  origin         DataOrigin
+  confidence     Decimal?     @db.Decimal(5, 4)
+  sourceType     String?      @map("source_type") @db.VarChar(40)
+  sourceId       String?      @map("source_id") @db.Uuid
+  consentRecordId String?     @map("consent_record_id") @db.Uuid
+  expiresAt      DateTime?    @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt     DateTime?    @map("last_used_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version        Int          @default(1)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, type])
+  @@index([expiresAt])
+  @@map("learner_memories")
+}
+
+model Scenario {
+  id                String         @id @default(uuid()) @db.Uuid
+  slug              String         @db.VarChar(100)
+  version           Int
+  status            ScenarioStatus @default(DRAFT)
+  title             Json
+  description       Json
+  supportedLevels   CefrLevel[]    @map("supported_levels")
+  supportedModes    SessionMode[]  @map("supported_modes")
+  learningObjectives Json          @map("learning_objectives")
+  successRubric     Json           @map("success_rubric")
+  configuration     Json
+  publishedAt       DateTime?      @map("published_at") @db.Timestamptz(3)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  conversations     ConversationSession[]
+
+  @@unique([slug, version])
+  @@index([status, publishedAt])
+  @@map("scenarios")
+}
+
+model ConversationSession {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @map("user_id") @db.Uuid
+  scenarioId         String             @map("scenario_id") @db.Uuid
+  planActivityId     String?            @unique @map("plan_activity_id") @db.Uuid
+  mode               SessionMode
+  status             ConversationStatus @default(CREATED)
+  targetLevel        CefrLevel           @map("target_level")
+  mentorStyle        String              @map("mentor_style") @db.VarChar(32)
+  correctionIntensity Int                @map("correction_intensity") @db.SmallInt
+  policySnapshot     Json                @map("policy_snapshot")
+  startedAt          DateTime?           @map("started_at") @db.Timestamptz(3)
+  endedAt            DateTime?           @map("ended_at") @db.Timestamptz(3)
+  lastSequence       Int                 @default(0) @map("last_sequence")
+  failureCode        String?             @map("failure_code") @db.VarChar(80)
+  deletedAt          DateTime?           @map("deleted_at") @db.Timestamptz(3)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version            Int                 @default(1)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario           Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  planActivity       PlanActivity?        @relation(fields: [planActivityId], references: [id], onDelete: SetNull)
+  turns              ConversationTurn[]
+  assessments        Assessment[]
+  speechAssets       SpeechAsset[]
+  moderationReports  ModerationReport[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, updatedAt])
+  @@map("conversation_sessions")
+}
+
+model ConversationTurn {
+  id               String       @id @default(uuid()) @db.Uuid
+  sessionId        String       @map("session_id") @db.Uuid
+  sequence         Int
+  actor            ActorType
+  status           TurnStatus   @default(RECEIVED)
+  contentEncrypted Bytes?       @map("content_encrypted")
+  contentRedacted  String?      @map("content_redacted") @db.Text
+  language         String?      @db.VarChar(35)
+  parentTurnId     String?      @map("parent_turn_id") @db.Uuid
+  aiRunId          String?      @unique @map("ai_run_id") @db.Uuid
+  tokenCount       Int?         @map("token_count")
+  completedAt      DateTime?    @map("completed_at") @db.Timestamptz(3)
+  deletedAt        DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  session          ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  aiRun            AiRun?       @relation(fields: [aiRunId], references: [id], onDelete: SetNull)
+  observations     LearnerObservation[]
+  reports          ModerationReport[]
+
+  @@unique([sessionId, sequence])
+  @@index([sessionId, createdAt])
+  @@map("conversation_turns")
+}
+
+model Assessment {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @map("user_id") @db.Uuid
+  sessionId       String?          @map("session_id") @db.Uuid
+  type            AssessmentType
+  status          AssessmentStatus @default(PENDING)
+  rubricVersion   String           @map("rubric_version") @db.VarChar(40)
+  result          Json?
+  confidence      Decimal?         @db.Decimal(5, 4)
+  aiRunId         String?          @map("ai_run_id") @db.Uuid
+  invalidatedAt   DateTime?        @map("invalidated_at") @db.Timestamptz(3)
+  completedAt     DateTime?        @map("completed_at") @db.Timestamptz(3)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session         ConversationSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  aiRun           AiRun?           @relation(fields: [aiRunId], references: [id], onDelete: SetNull)
+  observations    LearnerObservation[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([sessionId, type])
+  @@map("assessments")
+}
+
+model LearnerObservation {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  assessmentId   String?       @map("assessment_id") @db.Uuid
+  turnId         String?       @map("turn_id") @db.Uuid
+  skill          SkillType
+  skillKey       String        @map("skill_key") @db.VarChar(120)
+  origin         DataOrigin
+  value          Decimal       @db.Decimal(6, 4)
+  weight         Decimal       @db.Decimal(5, 4)
+  confidence     Decimal       @db.Decimal(5, 4)
+  evidenceEncrypted Bytes?     @map("evidence_encrypted")
+  errorCategory  ErrorCategory? @map("error_category")
+  algorithmVersion String      @map("algorithm_version") @db.VarChar(40)
+  observedAt     DateTime      @map("observed_at") @db.Timestamptz(3)
+  invalidatedAt  DateTime?     @map("invalidated_at") @db.Timestamptz(3)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment     Assessment?   @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  turn           ConversationTurn? @relation(fields: [turnId], references: [id], onDelete: SetNull)
+
+  @@index([userId, skill, skillKey, observedAt(sort: Desc)])
+  @@index([assessmentId])
+  @@map("learner_observations")
+}
+
+model LearningItem {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @map("user_id") @db.Uuid
+  type             LearningItemType
+  language           String           @default("en") @db.VarChar(5)
+  canonicalKey     String           @map("canonical_key") @db.VarChar(255)
+  contentEncrypted Bytes            @map("content_encrypted")
+  contextEncrypted Bytes?           @map("context_encrypted")
+  sourceType       String           @map("source_type") @db.VarChar(40)
+  sourceId         String?          @map("source_id") @db.Uuid
+  priority         Decimal          @default(0.5) @db.Decimal(5, 4)
+  state            MasteryState     @default(NEW)
+  stability        Decimal          @default(0) @db.Decimal(10, 4)
+  difficulty       Decimal          @default(0.5) @db.Decimal(5, 4)
+  dueAt            DateTime?        @map("due_at") @db.Timestamptz(3)
+  lastReviewedAt   DateTime?        @map("last_reviewed_at") @db.Timestamptz(3)
+  reviewCount      Int              @default(0) @map("review_count")
+  lapseCount       Int              @default(0) @map("lapse_count")
+  algorithmVersion String           @map("algorithm_version") @db.VarChar(40)
+  active           Boolean          @default(true)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version          Int              @default(1)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts         ReviewAttempt[]
+
+  @@unique([userId, type, canonicalKey])
+  @@index([userId, active, dueAt])
+  @@index([userId, language, active, dueAt])
+  @@index([userId, state])
+  @@map("learning_items")
+}
+
+model VocabularyEntry {
+  id                   String    @id @default(uuid()) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  language             String    @db.VarChar(5)
+  termEncrypted        Bytes     @map("term_encrypted")
+  translationEncrypted Bytes     @map("translation_encrypted")
+  exampleEncrypted     Bytes?    @map("example_encrypted")
+  notesEncrypted       Bytes?    @map("notes_encrypted")
+  sourceType           String    @default("MANUAL") @map("source_type") @db.VarChar(32)
+  sourceId             String?   @map("source_id") @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(3)
+  version              Int       @default(1)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, language, deletedAt, createdAt(sort: Desc)])
+  @@map("vocabulary_entries")
+}
+
+model ReviewAttempt {
+  id                String       @id @default(uuid()) @db.Uuid
+  userId            String       @map("user_id") @db.Uuid
+  learningItemId    String       @map("learning_item_id") @db.Uuid
+  planActivityId    String?      @map("plan_activity_id") @db.Uuid
+  rating            ReviewRating
+  responseEncrypted Bytes?       @map("response_encrypted")
+  responseTimeMs    Int?         @map("response_time_ms")
+  previousState     Json         @map("previous_state")
+  resultingState    Json         @map("resulting_state")
+  algorithmVersion  String       @map("algorithm_version") @db.VarChar(40)
+  reviewedAt        DateTime     @map("reviewed_at") @db.Timestamptz(3)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learningItem      LearningItem @relation(fields: [learningItemId], references: [id], onDelete: Cascade)
+  planActivity      PlanActivity? @relation(fields: [planActivityId], references: [id], onDelete: SetNull)
+
+  @@index([learningItemId, reviewedAt(sort: Desc)])
+  @@index([userId, reviewedAt(sort: Desc)])
+  @@map("review_attempts")
+}
+
+model LearningPlan {
+  id              String     @id @default(uuid()) @db.Uuid
+  userId          String     @map("user_id") @db.Uuid
+  language        String     @default("en") @db.VarChar(5)
+  status          PlanStatus @default(DRAFT)
+  periodStart     DateTime   @map("period_start") @db.Date
+  periodEnd       DateTime   @map("period_end") @db.Date
+  dailyBudgetMinutes Int     @map("daily_budget_minutes")
+  rationale       Json
+  algorithmVersion String    @map("algorithm_version") @db.VarChar(40)
+  activatedAt     DateTime?  @map("activated_at") @db.Timestamptz(3)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version         Int        @default(1)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities      PlanActivity[]
+
+  @@unique([userId, language, periodStart, status])
+  @@index([userId, status, periodStart(sort: Desc)])
+  @@index([userId, language, status, periodStart(sort: Desc)])
+  @@map("learning_plans")
+}
+
+model PlanActivity {
+  id               String         @id @default(uuid()) @db.Uuid
+  planId           String         @map("plan_id") @db.Uuid
+  type             ActivityType
+  status           ActivityStatus @default(PLANNED)
+  scheduledFor     DateTime       @map("scheduled_for") @db.Date
+  estimatedMinutes Int            @map("estimated_minutes")
+  priority         Int            @default(1) @db.SmallInt
+  configuration    Json
+  reason           Json
+  startedAt        DateTime?      @map("started_at") @db.Timestamptz(3)
+  completedAt      DateTime?      @map("completed_at") @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  plan             LearningPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  conversation     ConversationSession?
+  reviewAttempts   ReviewAttempt[]
+
+  @@index([planId, scheduledFor, status])
+  @@map("plan_activities")
+}
+
+model SpeechAsset {
+  id               String            @id @default(uuid()) @db.Uuid
+  userId           String            @map("user_id") @db.Uuid
+  sessionId        String?           @map("session_id") @db.Uuid
+  status           SpeechAssetStatus @default(UPLOADING)
+  objectKey        String            @unique @map("object_key") @db.VarChar(1024)
+  mimeType         String            @map("mime_type") @db.VarChar(100)
+  sizeBytes        BigInt?           @map("size_bytes")
+  checksumSha256   String?           @map("checksum_sha256") @db.Char(64)
+  durationMs       Int?              @map("duration_ms")
+  retentionUntil   DateTime          @map("retention_until") @db.Timestamptz(3)
+  consentRecordId  String?           @map("consent_record_id") @db.Uuid
+  deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz(3)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session          ConversationSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  transcript       SpeechTranscript?
+  analyses         PronunciationAnalysis[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([retentionUntil, status])
+  @@map("speech_assets")
+}
+
+model SpeechTranscript {
+  id                String   @id @default(uuid()) @db.Uuid
+  speechAssetId     String   @unique @map("speech_asset_id") @db.Uuid
+  provider          String   @db.VarChar(40)
+  providerModel     String   @map("provider_model") @db.VarChar(120)
+  language          String   @db.VarChar(35)
+  textEncrypted     Bytes    @map("text_encrypted")
+  confidence        Decimal? @db.Decimal(5, 4)
+  segments          Json?
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  speechAsset       SpeechAsset @relation(fields: [speechAssetId], references: [id], onDelete: Cascade)
+
+  @@map("speech_transcripts")
+}
+
+model PronunciationAnalysis {
+  id                String   @id @default(uuid()) @db.Uuid
+  speechAssetId     String   @map("speech_asset_id") @db.Uuid
+  algorithmVersion  String   @map("algorithm_version") @db.VarChar(40)
+  signalQuality     Decimal  @map("signal_quality") @db.Decimal(5, 4)
+  intelligibility   Decimal? @db.Decimal(5, 4)
+  fluency           Decimal? @db.Decimal(5, 4)
+  pace              Decimal? @db.Decimal(7, 3)
+  rhythm            Decimal? @db.Decimal(5, 4)
+  intonation        Decimal? @db.Decimal(5, 4)
+  confidence        Decimal  @db.Decimal(5, 4)
+  details           Json?
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  speechAsset       SpeechAsset @relation(fields: [speechAssetId], references: [id], onDelete: Cascade)
+
+  @@index([speechAssetId, createdAt(sort: Desc)])
+  @@map("pronunciation_analyses")
+}
+
+model PromptDefinition {
+  id            String   @id @default(uuid()) @db.Uuid
+  taskType      String   @map("task_type") @db.VarChar(80)
+  version       Int
+  status        String   @db.VarChar(24)
+  template      String   @db.Text
+  inputSchema   Json     @map("input_schema")
+  outputSchema  Json     @map("output_schema")
+  manifest      Json
+  checksum      String   @db.Char(64)
+  createdBy     String   @map("created_by") @db.Uuid
+  approvedBy    String?  @map("approved_by") @db.Uuid
+  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  aiRuns        AiRun[]
+
+  @@unique([taskType, version])
+  @@index([taskType, status])
+  @@map("prompt_definitions")
+}
+
+model AiRun {
+  id                String       @id @default(uuid()) @db.Uuid
+  userId            String?      @map("user_id") @db.Uuid
+  taskType          String       @map("task_type") @db.VarChar(80)
+  taskVersion       Int          @map("task_version")
+  status            AiTaskStatus @default(QUEUED)
+  provider          AiProvider
+  model             String       @db.VarChar(160)
+  promptDefinitionId String      @map("prompt_definition_id") @db.Uuid
+  routingVersion    String       @map("routing_version") @db.VarChar(40)
+  dataRegion        String       @map("data_region") @db.VarChar(32)
+  inputHash         String       @map("input_hash") @db.Char(64)
+  outputHash        String?      @map("output_hash") @db.Char(64)
+  inputTokens       Int?         @map("input_tokens")
+  outputTokens      Int?         @map("output_tokens")
+  costMicros        BigInt?      @map("cost_micros")
+  currency          String       @default("USD") @db.Char(3)
+  latencyMs         Int?         @map("latency_ms")
+  firstTokenMs      Int?         @map("first_token_ms")
+  fallbackCount     Int          @default(0) @map("fallback_count")
+  validationResult  Json?        @map("validation_result")
+  providerRequestId String?      @map("provider_request_id") @db.VarChar(255)
+  errorCode         String?      @map("error_code") @db.VarChar(80)
+  startedAt         DateTime?    @map("started_at") @db.Timestamptz(3)
+  completedAt       DateTime?    @map("completed_at") @db.Timestamptz(3)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  user              User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  promptDefinition  PromptDefinition @relation(fields: [promptDefinitionId], references: [id], onDelete: Restrict)
+  turn              ConversationTurn?
+  assessments       Assessment[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([taskType, provider, status, createdAt])
+  @@index([providerRequestId])
+  @@map("ai_runs")
+}
+
+model ModerationReport {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @map("user_id") @db.Uuid
+  sessionId        String?          @map("session_id") @db.Uuid
+  turnId           String?          @map("turn_id") @db.Uuid
+  reason           ReportReason
+  status           ModerationStatus @default(OPEN)
+  commentEncrypted Bytes?           @map("comment_encrypted")
+  contentSnapshotEncrypted Bytes?   @map("content_snapshot_encrypted")
+  assignedTo       String?          @map("assigned_to") @db.Uuid
+  decision         ModerationDecision?
+  resolutionCode   String?          @map("resolution_code") @db.VarChar(80)
+  resolvedAt       DateTime?        @map("resolved_at") @db.Timestamptz(3)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session          ConversationSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  turn             ConversationTurn? @relation(fields: [turnId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("moderation_reports")
+}
+
+model Subscription {
+  id                   String               @id @default(uuid()) @db.Uuid
+  userId               String               @map("user_id") @db.Uuid
+  provider             SubscriptionProvider
+  providerCustomerId   String?              @map("provider_customer_id") @db.VarChar(255)
+  providerSubscriptionId String              @map("provider_subscription_id") @db.VarChar(255)
+  productKey           String               @map("product_key") @db.VarChar(80)
+  basePlanKey          String?              @map("base_plan_key") @db.VarChar(80)
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime?            @map("current_period_start") @db.Timestamptz(3)
+  currentPeriodEnd     DateTime?            @map("current_period_end") @db.Timestamptz(3)
+  trialEnd             DateTime?            @map("trial_end") @db.Timestamptz(3)
+  cancelAtPeriodEnd    Boolean               @default(false) @map("cancel_at_period_end")
+  purchaseTokenEncrypted Bytes?             @map("purchase_token_encrypted")
+  originalTransactionId String?             @map("original_transaction_id") @db.VarChar(255)
+  countryCode          String?               @map("country_code") @db.Char(2)
+  acknowledgedAt       DateTime?             @map("acknowledged_at") @db.Timestamptz(3)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version              Int                   @default(1)
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  entitlements         Entitlement[]
+
+  @@unique([provider, providerSubscriptionId])
+  @@index([userId, status])
+  @@index([currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+model Entitlement {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  subscriptionId String?           @map("subscription_id") @db.Uuid
+  key            String            @db.VarChar(80)
+  status         EntitlementStatus
+  validFrom      DateTime          @map("valid_from") @db.Timestamptz(3)
+  validUntil     DateTime?         @map("valid_until") @db.Timestamptz(3)
+  source         String            @db.VarChar(40)
+  metadata       Json?
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, key, source])
+  @@index([userId, status, validUntil])
+  @@map("entitlements")
+}
+
+model BillingEvent {
+  id              String             @id @default(uuid()) @db.Uuid
+  provider        SubscriptionProvider
+  providerEventId String             @map("provider_event_id") @db.VarChar(255)
+  status          BillingEventStatus @default(RECEIVED)
+  eventType       String             @map("event_type") @db.VarChar(120)
+  payloadEncrypted Bytes             @map("payload_encrypted")
+  occurredAt      DateTime?          @map("occurred_at") @db.Timestamptz(3)
+  processedAt     DateTime?          @map("processed_at") @db.Timestamptz(3)
+  errorCode       String?            @map("error_code") @db.VarChar(80)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([provider, providerEventId])
+  @@index([status, createdAt])
+  @@map("billing_events")
+}
+
+model UsageLedger {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  unit           UsageUnit
+  quantity       BigInt
+  costMicros     BigInt?   @map("cost_micros")
+  currency       String    @default("USD") @db.Char(3)
+  sourceType     String    @map("source_type") @db.VarChar(40)
+  sourceId       String?   @map("source_id") @db.Uuid
+  idempotencyKey String    @unique @map("idempotency_key") @db.VarChar(160)
+  recordedAt     DateTime  @default(now()) @map("recorded_at") @db.Timestamptz(3)
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, recordedAt])
+  @@index([unit, recordedAt])
+  @@map("usage_ledger")
+}
+
+model UserDevice {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  installationId String    @map("installation_id") @db.Uuid
+  platform       String    @db.VarChar(20)
+  pushTokenEncrypted Bytes? @map("push_token_encrypted")
+  appVersionCode Int?      @map("app_version_code")
+  osApiLevel     Int?      @map("os_api_level")
+  locale         String?   @db.VarChar(35)
+  lastSeenAt     DateTime  @map("last_seen_at") @db.Timestamptz(3)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, installationId])
+  @@index([userId, revokedAt])
+  @@map("user_devices")
+}
+
+model Notification {
+  id             String              @id @default(uuid()) @db.Uuid
+  userId         String              @map("user_id") @db.Uuid
+  channel        NotificationChannel
+  templateKey    String              @map("template_key") @db.VarChar(80)
+  templateVersion Int                @map("template_version")
+  status         NotificationStatus  @default(PENDING)
+  payload        Json
+  scheduledAt    DateTime            @map("scheduled_at") @db.Timestamptz(3)
+  sentAt         DateTime?           @map("sent_at") @db.Timestamptz(3)
+  failureCode    String?             @map("failure_code") @db.VarChar(80)
+  idempotencyKey String              @unique @map("idempotency_key") @db.VarChar(160)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model UserStreak {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  currentDays      Int      @default(0) @map("current_days")
+  longestDays      Int      @default(0) @map("longest_days")
+  lastQualifiedDate DateTime? @map("last_qualified_date") @db.Date
+  freezeCredits    Int      @default(0) @map("freeze_credits")
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_streaks")
+}
+
+model XpLedger {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  amount         Int
+  reason         String   @db.VarChar(80)
+  sourceType     String   @map("source_type") @db.VarChar(40)
+  sourceId       String?  @map("source_id") @db.Uuid
+  idempotencyKey String   @unique @map("idempotency_key") @db.VarChar(160)
+  earnedAt       DateTime @default(now()) @map("earned_at") @db.Timestamptz(3)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, earnedAt])
+  @@map("xp_ledger")
+}
+
+model AuditLog {
+  id             String    @id @default(uuid()) @db.Uuid
+  actorUserId    String?   @map("actor_user_id") @db.Uuid
+  actorType      String    @map("actor_type") @db.VarChar(24)
+  action         String    @db.VarChar(120)
+  resourceType   String    @map("resource_type") @db.VarChar(80)
+  resourceId     String?   @map("resource_id") @db.Uuid
+  subjectUserId  String?   @map("subject_user_id") @db.Uuid
+  outcome        String    @db.VarChar(24)
+  reason         String?   @db.VarChar(255)
+  correlationId  String    @map("correlation_id") @db.Uuid
+  metadata       Json?
+  previousHash   String?   @map("previous_hash") @db.Char(64)
+  entryHash      String    @map("entry_hash") @db.Char(64)
+  occurredAt     DateTime  @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([actorUserId, occurredAt(sort: Desc)])
+  @@index([subjectUserId, occurredAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@index([correlationId])
+  @@map("audit_logs")
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid()) @db.Uuid
+  aggregateType String       @map("aggregate_type") @db.VarChar(80)
+  aggregateId   String       @map("aggregate_id") @db.Uuid
+  eventType     String       @map("event_type") @db.VarChar(120)
+  schemaVersion Int          @map("schema_version")
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  correlationId String       @map("correlation_id") @db.Uuid
+  causationId   String?      @map("causation_id") @db.Uuid
+  occurredAt    DateTime     @map("occurred_at") @db.Timestamptz(3)
+  availableAt   DateTime     @default(now()) @map("available_at") @db.Timestamptz(3)
+  publishedAt   DateTime?    @map("published_at") @db.Timestamptz(3)
+  attempts      Int          @default(0)
+  lastErrorCode String?      @map("last_error_code") @db.VarChar(80)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, availableAt])
+  @@index([aggregateType, aggregateId, occurredAt])
+  @@map("outbox_events")
+}
+
+model InboxMessage {
+  id             String    @id @default(uuid()) @db.Uuid
+  consumer       String    @db.VarChar(100)
+  messageId      String    @map("message_id") @db.Uuid
+  eventType      String    @map("event_type") @db.VarChar(120)
+  schemaVersion  Int       @map("schema_version")
+  status         JobStatus @default(RECEIVED)
+  receivedAt     DateTime  @default(now()) @map("received_at") @db.Timestamptz(3)
+  processedAt    DateTime? @map("processed_at") @db.Timestamptz(3)
+  attempts       Int       @default(0)
+  lastErrorCode  String?   @map("last_error_code") @db.VarChar(80)
+
+  @@unique([consumer, messageId])
+  @@index([status, receivedAt])
+  @@map("inbox_messages")
+}
+
+model IdempotencyRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  scope           String    @db.VarChar(80)
+  keyHash         String    @map("key_hash") @db.Char(64)
+  actorId         String?   @map("actor_id") @db.Uuid
+  requestHash     String    @map("request_hash") @db.Char(64)
+  responseStatus  Int?      @map("response_status")
+  responseBody    Json?     @map("response_body")
+  resourceId      String?   @map("resource_id") @db.Uuid
+  lockedUntil     DateTime? @map("locked_until") @db.Timestamptz(3)
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz(3)
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([scope, keyHash])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+model DataTombstone {
+  id             String   @id @default(uuid()) @db.Uuid
+  subjectHash    String   @unique @map("subject_hash") @db.Char(64)
+  deletionRequestId String @map("deletion_request_id") @db.Uuid
+  deletedAt      DateTime @map("deleted_at") @db.Timestamptz(3)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+  reason         String   @db.VarChar(40)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("data_tombstones")
+}

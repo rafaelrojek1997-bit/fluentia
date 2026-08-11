@@ -1,0 +1,2 @@
+"use client";
+export default function ErrorPage({reset}:{error:Error&{digest?:string},reset():void}){return <main className="onboarding"><div className="card" style={{maxWidth:520,textAlign:"center"}}><p className="eyebrow">Coś poszło nie tak</p><h1>Nie udało się wyświetlić tej części</h1><p className="muted">Twoje zapisane postępy są bezpieczne. Spróbuj ponownie.</p><button className="button primary" onClick={reset}>Spróbuj ponownie</button></div></main>}

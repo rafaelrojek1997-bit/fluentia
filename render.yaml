@@ -1,0 +1,67 @@
+services:
+  - type: web
+    name: fluentia-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeployTrigger: commit
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mentor/api prisma:generate && pnpm --filter @mentor/api build
+    startCommand: pnpm --filter @mentor/api prisma:deploy && pnpm --filter @mentor/api start
+    healthCheckPath: /api/v1/health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fluentia-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: fluentia
+      - key: JWT_AUDIENCE
+        value: fluentia-clients
+      - key: ACCESS_TOKEN_TTL_SECONDS
+        value: "900"
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: "30"
+      - key: WEB_ORIGIN
+        value: https://fluentia-web.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: DATA_ENCRYPTION_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6-terra
+
+  - type: web
+    name: fluentia-web
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeployTrigger: commit
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mentor/web build
+    startCommand: pnpm --filter @mentor/web start
+    healthCheckPath: /sign-in
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NEXT_PUBLIC_API_URL
+        value: https://fluentia-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_PRIVACY_EMAIL
+        sync: false
+
+databases:
+  - name: fluentia-db
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "17"
+    databaseName: fluentia
+    user: fluentia
+    ipAllowList: []

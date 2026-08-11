@@ -1,0 +1,43 @@
+{
+    "name":  "@mentor/web",
+    "version":  "0.1.0",
+    "private":  true,
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "next dev",
+                    "build":  "next build",
+                    "start":  "next start",
+                    "lint":  "eslint .",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "vitest run",
+                    "test:e2e":  "playwright test",
+                    "test:coverage":  "vitest run --coverage"
+                },
+    "dependencies":  {
+                         "@hookform/resolvers":  "latest",
+                         "@tanstack/react-query":  "latest",
+                         "framer-motion":  "latest",
+                         "lucide-react":  "latest",
+                         "next":  "latest",
+                         "next-themes":  "latest",
+                         "react":  "latest",
+                         "react-dom":  "latest",
+                         "react-hook-form":  "latest",
+                         "zod":  "latest"
+                     },
+    "devDependencies":  {
+                            "@playwright/test":  "^1.62.1",
+                            "@testing-library/jest-dom":  "latest",
+                            "@testing-library/react":  "latest",
+                            "@types/node":  "latest",
+                            "@types/react":  "latest",
+                            "@types/react-dom":  "latest",
+                            "@vitejs/plugin-react":  "latest",
+                            "@vitest/coverage-v8":  "^4.1.10",
+                            "eslint":  "^9.39.0",
+                            "eslint-config-next":  "latest",
+                            "jsdom":  "latest",
+                            "typescript":  "^6.0.0",
+                            "vitest":  "latest"
+                        }
+}

@@ -1,0 +1,14 @@
+{
+    "name":  "ai-english-mentor",
+    "private":  true,
+    "packageManager":  "pnpm@11.9.0",
+    "scripts":  {
+                    "dev":  "npm --prefix apps/web run dev",
+                    "build":  "npm --prefix apps/web run build",
+                    "test":  "npm --prefix apps/web run test",
+                    "typecheck":  "npm --prefix apps/web run typecheck",
+                    "lint":  "npm --prefix apps/web run lint",
+                    "test:all":  "npm --prefix apps/api run test \u0026\u0026 npm --prefix apps/web run test \u0026\u0026 npm --prefix apps/web run test:e2e",
+                    "test:coverage":  "npm --prefix apps/api run test:coverage \u0026\u0026 npm --prefix apps/web run test:coverage"
+                }
+}

@@ -1,0 +1,29 @@
+"use client";
+import Link from "next/link";
+import { ArrowRight, Brain, Clock3, Flame, MessageCircle, Sparkles, Target } from "lucide-react";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api-client";
+import { useAuth } from "@/lib/auth";
+
+import { useDemo } from "@/lib/demo-store";
+type DashboardData={
+ learner:{name:string;level:string;weeklyMinutes:number};
+ stats:{completedSessions:number;completedToday:number;correctionCount:number;weeklyPracticeMinutes:number;weeklyGoalMinutes:number;xp:number;streakDays:number;longestStreakDays:number};
+ activeConversation:null|{id:string;targetLevel:string;scenario:{slug:string;title:Record<string,string>}};
+ latestFeedback:null|{result:unknown;completedAt:string};
+};
+
+export default function Dashboard(){
+ const {ready,user}=useAuth(); const {learningLanguage}=useDemo(); const [data,setData]=useState<DashboardData|null>(null); const [error,setError]=useState("");
+ useEffect(()=>{if(!ready||!user)return;setData(null);setError("");api.get<DashboardData>("/me/language-dashboard").then(setData).catch(cause=>setError(cause instanceof Error?cause.message:"Nie udało się pobrać postępu."))},[ready,user,learningLanguage]);
+ if(!data)return <div className="page"><div className="card">{error||"Pobieram Twój aktualny postęp…"}</div></div>;
+ const language=learningLanguage==="de"?"de":"en"; const dailyTarget=Math.max(10,Math.round(data.learner.weeklyMinutes/7)); const weeklyPercent=Math.min(100,Math.round(data.stats.weeklyPracticeMinutes/Math.max(1,data.stats.weeklyGoalMinutes)*100)); const active=data.activeConversation; const scenarioTitle=active?.scenario.title[language]??active?.scenario.title.en??"rozmowę z mentorem";
+ return <div className="page"><div className="page-head"><div><p className="eyebrow">Twój panel nauki</p><h1>Dzień dobry, {data.learner.name} 👋</h1><p className="subtitle">Poziom {data.learner.level} · cel około {dailyTarget} minut dziennie.</p></div><span className="pill"><Sparkles size={14}/> {data.stats.xp.toLocaleString("pl")} XP</span></div>
+ <div className="dashboard-grid grid"><section className="grid">
+  <motion.div className="card hero" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}}><div className="hero-copy"><span className="pill"><Clock3 size={14}/> {active?"Aktywna sesja czeka":"Rekomendacja na dziś"}</span><h2 style={{marginTop:18}}>{active?`Wznów: ${scenarioTitle}`:"Rozpocznij praktyczną rozmowę"}</h2><p>{active?"Twoja historia jest zapisana. Wróć dokładnie do miejsca, w którym skończyłeś.":"Mentor dopasuje język, polskie podpowiedzi i korekty do Twojego poziomu."}</p><div className="hero-actions"><Link className="button white" href="/conversation"><MessageCircle size={17}/> {active?"Wznów rozmowę":"Rozpocznij rozmowę"}</Link><Link className="button ghost" style={{color:"white"}} href="/learning-plan">Zobacz plan <ArrowRight size={16}/></Link></div></div></motion.div>
+  <div className="stat-row"><div className="stat"><span>Ukończone sesje</span><b>{data.stats.completedSessions}</b><div className="muted" style={{fontSize:11,marginTop:5}}>Dzisiaj: {data.stats.completedToday}</div></div><div className="stat"><span>Seria</span><b><Flame size={20} color="#f0a832"/> {data.stats.streakDays} dni</b><div className="muted" style={{fontSize:11,marginTop:5}}>Najdłuższa: {data.stats.longestStreakDays} dni</div></div><div className="stat"><span>Zapisane korekty</span><b>{data.stats.correctionCount}</b><div className="muted" style={{fontSize:11,marginTop:5}}>Na podstawie prawdziwych rozmów</div></div></div>
+  <div className="card"><div className="section-head"><h2>Co zrobić teraz?</h2><Link className="muted" style={{fontSize:13}} href="/learning-plan">Cały plan →</Link></div><div className="lesson-list"><Lesson icon={<MessageCircle/>} title={active?"Dokończ aktywną rozmowę":"Rozmowa z mentorem"} detail={`${active?active.targetLevel:data.learner.level} · tekst lub głos`} href="/conversation"/><Lesson icon={<Brain/>} title={`Powtórz ${data.stats.correctionCount} zapisanych korekt`} detail="Na podstawie Twoich wypowiedzi" href="/review"/><Lesson icon={<Target/>} title="Wykonaj misję dnia" detail="Krótki krok i 20 XP" href="/missions"/></div></div>
+ </section><aside className="grid" style={{alignContent:"start"}}><div className="card"><div className="section-head"><h2>Cel na ten tydzień</h2><span className="pill">{weeklyPercent}%</span></div><div className="progress"><span style={{width:weeklyPercent+"%"}}/></div><p className="muted" style={{marginBottom:0}}><b>{data.stats.weeklyPracticeMinutes} min</b> z {data.stats.weeklyGoalMinutes} min · {language==="de"?"niemiecki":"angielski"}</p></div><div className="card"><div className="section-head"><h2>Twój poziom</h2><span className="pill">{data.learner.level}</span></div><p className="muted">Mentor automatycznie dopasowuje trudność {language==="de"?"niemieckiego":"angielskiego"} oraz ilość polskich wyjaśnień.</p></div><div className="card"><span className="pill" style={{background:"var(--teal-soft)",color:"var(--teal)"}}><Sparkles size={13}/> Ostatni wynik</span><p style={{lineHeight:1.6,fontSize:14,marginBottom:6}}>{data.latestFeedback?"Ostatnia sesja ma zapisane podsumowanie i priorytety do dalszej nauki.":"Ukończ pierwszą rozmowę, aby zobaczyć spersonalizowane wnioski."}</p><Link href="/weekly-report" className="muted" style={{fontSize:12}}>Otwórz raport tygodniowy →</Link></div></aside></div></div>
+}
+function Lesson({icon,title,detail,href}:{icon:React.ReactNode;title:string;detail:string;href:string}){return <Link className="lesson" href={href}><div className="lesson-icon">{icon}</div><div><h3>{title}</h3><p>{detail}</p></div><span className="pill">Start</span></Link>}
