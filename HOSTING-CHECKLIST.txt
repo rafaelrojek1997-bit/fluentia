@@ -1,0 +1,15 @@
+FLUENTIA - CHECKLISTA HOSTINGU
+
+[ ] Konto Render ma zweryfikowany e-mail
+[ ] Render wykryl render.yaml
+[ ] OPENAI_API_KEY zostal wpisany tylko w Render
+[ ] NEXT_PUBLIC_PRIVACY_EMAIL zostal uzupelniony
+[ ] Baza fluentia-db ma stan Available
+[ ] API fluentia-api ma stan Live
+[ ] Strona fluentia-web ma stan Live
+[ ] /api/v1/health/live zwraca status ok
+[ ] /api/v1/health/ready potwierdza baze
+[ ] Mozna utworzyc konto i zalogowac sie
+[ ] Dziala czat angielski i niemiecki
+[ ] Ustawiono limit wydatkow OpenAI API
+[ ] Przed wiekszym ruchem wlaczono backupy bazy

@@ -41,7 +41,7 @@ export class OpenAiAdapter implements AiProviderAdapter {
   }
 
   async generateMentorAnswer(request: MentorRequest): Promise<MentorGeneration> {
-    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5.6-terra";
+    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5-mini";
     const history = request.history.map(message => ({ role: message.actor, content: message.content }));
     const response = await this.client().responses.create({
       model,
@@ -64,7 +64,7 @@ export class OpenAiAdapter implements AiProviderAdapter {
   }
 
   async generateAssistance(request: AssistanceRequest): Promise<string> {
-    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5.6-terra";
+    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5-mini";
     const targetLanguage = request.learningLanguage === "de" ? "German" : "English";
     const task = request.kind === "VOCABULARY"
       ? `Translate the learner's selected ${targetLanguage} word or phrase into concise, natural Polish. Return only the Polish translation, without quotation marks, explanations or headings.`
@@ -88,7 +88,7 @@ export class OpenAiAdapter implements AiProviderAdapter {
     return text;
   }
   async normalizeTranscript(content: string, learningLanguage: "en" | "de" = "en"): Promise<string> {
-    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5.6-terra";
+    const model = this.config.get<string>("OPENAI_MODEL") ?? "gpt-5-mini";
     const response = await this.client().responses.create({
       model, store: false, reasoning: { effort: "low" }, max_output_tokens: 300,
       instructions: `You edit ${learningLanguage === "de" ? "German" : "English"} speech-recognition transcripts. Return polished standard ${learningLanguage === "de" ? "German" : "English"} only. Add capitalization and natural punctuation. Correct obvious spelling, transcription, and grammar errors while preserving the speaker's exact meaning, intent, tense, names, and level of detail. Never add facts, explanations, translations, quotation marks, or commentary. If uncertain, preserve the original wording.`,

@@ -14,7 +14,7 @@ const schema = z.object({
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   COOKIE_SECURE: z.enum(["true", "false"]).default("false").transform(v => v === "true"),
   OPENAI_API_KEY: optionalSecret,
-  OPENAI_MODEL: z.string().min(1).default("gpt-5.6-terra"),
+  OPENAI_MODEL: z.string().min(1).default("gpt-5-mini"),
   DATA_ENCRYPTION_KEY: optionalSecret
 });
 

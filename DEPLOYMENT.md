@@ -1,32 +1,49 @@
-# Publikacja Fluentia na Render
+# Publikacja Fluentia na Render - krok po kroku
 
-Projekt zawiera plik `render.yaml`, który tworzy:
+Projekt jest przygotowany jako jeden Blueprint Render. Plik `render.yaml` tworzy automatycznie strone Next.js, API NestJS, baze PostgreSQL i tabele przez migracje Prisma.
 
-- publiczną stronę Next.js,
-- publiczne API NestJS,
-- PostgreSQL,
-- migracje Prisma wykonywane przed wdrożeniem API.
+## Co trzeba przygotowac
 
-## Pierwsze wdrożenie
+1. Konto GitHub z tym projektem.
+2. Konto Render z potwierdzonym adresem e-mail.
+3. Klucz OpenAI API. Nigdy nie dodawaj go do GitHub.
+4. Publiczny adres e-mail do kontaktu w polityce prywatnosci.
 
-1. Umieść repozytorium na GitHubie lub GitLabie.
-2. Zaloguj się do Render i wybierz **New > Blueprint**.
-3. Połącz repozytorium i wskaż plik `render.yaml`.
-4. Podaj sekrety wymagane przez kreator:
-   - `OPENAI_API_KEY` — produkcyjny klucz OpenAI,
-   - `NEXT_PUBLIC_PRIVACY_EMAIL` — publiczny adres kontaktowy.
-5. Zatwierdź utworzenie zasobów.
-6. Po zakończeniu sprawdź:
-   - `https://fluentia-web.onrender.com/sign-up`,
-   - `https://fluentia-api.onrender.com/api/v1/health/ready`.
+## Wdrozenie
 
-## Ważne przed udostępnieniem użytkownikom
+1. Wejdz na `https://dashboard.render.com/blueprint/new`.
+2. Wybierz repozytorium `https://github.com/rafaelrojek1997-bit/fluentia`.
+3. Render wykryje `render.yaml` z katalogu glownego.
+4. Kliknij **Connect**.
+5. Wpisz `OPENAI_API_KEY` i `NEXT_PUBLIC_PRIVACY_EMAIL`.
+6. Kliknij **Deploy Blueprint** lub **Apply**.
+7. Poczekaj, az baza, API i strona uzyskaja stan **Available** lub **Live**.
 
-Bezpłatny PostgreSQL na Render wygasa po 30 dniach. Przed upływem terminu zmień plan bazy na płatny i włącz kopie zapasowe. Bezpłatne serwisy WWW mogą usypiać przy braku ruchu, więc pierwsze otwarcie może potrwać dłużej.
+## Kontrola po wdrozeniu
 
-Jeśli Render zmieni nazwę subdomeny z powodu konfliktu, zaktualizuj:
+- `https://fluentia-api.onrender.com/api/v1/health/live` - status `ok`.
+- `https://fluentia-api.onrender.com/api/v1/health/ready` - baza ma status `ok`.
+- `https://fluentia-web.onrender.com/sign-up` - utworz konto.
+- `https://fluentia-web.onrender.com/conversation` - sprawdz czat angielski i niemiecki.
 
-- `WEB_ORIGIN` w usłudze `fluentia-api`,
-- `NEXT_PUBLIC_API_URL` w usłudze `fluentia-web`,
+## Jesli Render nada inne adresy
 
-a następnie wykonaj ponowne wdrożenie obu usług.
+1. W `fluentia-api` ustaw `WEB_ORIGIN` na dokladny adres strony, bez ukosnika na koncu.
+2. W `fluentia-web` ustaw `NEXT_PUBLIC_API_URL` na adres API zakonczony `/api/v1`.
+3. Wykonaj **Manual Deploy > Deploy latest commit** dla obu uslug.
+
+## Gdy wdrozenie jest czerwone
+
+1. Otworz usluge ze statusem **Failed** i zakladke **Logs**.
+2. Skopiuj pierwsza czerwona linie bledu i okolo 20 linii pod nia.
+3. Nie kopiuj klucza OpenAI ani wartosci sekretow.
+
+## Wazne ograniczenia
+
+- Bezplatne serwisy moga zasypiac; pierwsze wejscie po przerwie trwa dluzej.
+- Bezplatna baza jest rozwiazaniem testowym. Przed wiekszym ruchem wybierz trwaly plan i backupy.
+- OpenAI API jest platne. Ustaw limit budzetu w OpenAI Platform.
+
+## Aktualizacje i ZIP
+
+Po zmianie kodu wykonaj commit i push do `main`; Render wdrozy nowa wersje. Plik `Fluentia-Hosting-Ready.zip` zawiera ten sam kod, ale automatyczne aktualizacje Render dzialaja przez GitHub.

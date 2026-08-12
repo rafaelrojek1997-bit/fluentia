@@ -16,7 +16,7 @@ The API fails closed when either the AI provider key or encryption key is missin
 
 ## Local configuration
 
-Set `OPENAI_API_KEY` in `apps/api/.env`. `DATA_ENCRYPTION_KEY` must contain a base64-encoded 32-byte key. `OPENAI_MODEL` defaults to `gpt-5.6-terra` for a quality/cost balance and can be changed without modifying code.
+Set `OPENAI_API_KEY` in `apps/api/.env`. `DATA_ENCRYPTION_KEY` must contain a base64-encoded 32-byte key. `OPENAI_MODEL` defaults to `gpt-5-mini` for a quality/cost balance and can be changed without modifying code.
 
 After PostgreSQL is available, apply migrations and load scenarios:
 
