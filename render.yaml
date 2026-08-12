@@ -6,7 +6,7 @@ services:
     region: frankfurt
     autoDeployTrigger: commit
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mentor/api prisma:generate && pnpm --filter @mentor/api build
-    startCommand: pnpm --filter @mentor/api prisma:deploy && pnpm --filter @mentor/api start
+    startCommand: pnpm --filter @mentor/api prisma:deploy && pnpm --filter @mentor/api prisma:seed && pnpm --filter @mentor/api start
     healthCheckPath: /api/v1/health/ready
     envVars:
       - key: NODE_ENV

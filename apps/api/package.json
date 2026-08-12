@@ -11,7 +11,7 @@
                     "prisma:generate":  "prisma generate",
                     "prisma:validate":  "prisma validate",
                     "prisma:migrate":  "prisma migrate dev",
-                    "prisma:seed":  "node --env-file=.env prisma/seed.mjs",
+                    "prisma:seed":  "node prisma/seed.mjs",
                     "prisma:deploy":  "prisma migrate deploy",
                     "test:coverage":  "vitest run --coverage"
                 },
