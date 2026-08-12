@@ -1,4 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
+const DEPLOYED_API_URL = "https://fluentia-api-yvxt.onrender.com/api/v1";
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = configuredApiUrl === "https://fluentia-api.onrender.com/api/v1"
+  ? DEPLOYED_API_URL
+  : configuredApiUrl ?? (process.env.NODE_ENV === "production" ? DEPLOYED_API_URL : "http://localhost:3001/api/v1");
 
 export type ProblemDetails = { status?: number; code?: string; detail?: string | string[]; correlationId?: string };
 export class ApiError extends Error {
