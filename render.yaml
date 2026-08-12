@@ -53,7 +53,7 @@ services:
       - key: NODE_VERSION
         value: 22.16.0
       - key: NEXT_PUBLIC_API_URL
-        value: https://fluentia-api.onrender.com/api/v1
+        value: https://fluentia-api-yvxt.onrender.com/api/v1
       - key: NEXT_PUBLIC_PRIVACY_EMAIL
         sync: false
 

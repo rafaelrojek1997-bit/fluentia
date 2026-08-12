@@ -21,8 +21,8 @@ Projekt jest przygotowany jako jeden Blueprint Render. Plik `render.yaml` tworzy
 
 ## Kontrola po wdrozeniu
 
-- `https://fluentia-api.onrender.com/api/v1/health/live` - status `ok`.
-- `https://fluentia-api.onrender.com/api/v1/health/ready` - baza ma status `ok`.
+- `https://fluentia-api-yvxt.onrender.com/api/v1/health/live` - status `ok`.
+- `https://fluentia-api-yvxt.onrender.com/api/v1/health/ready` - baza ma status `ok`.
 - `https://fluentia-web.onrender.com/sign-up` - utworz konto.
 - `https://fluentia-web.onrender.com/conversation` - sprawdz czat angielski i niemiecki.
 
