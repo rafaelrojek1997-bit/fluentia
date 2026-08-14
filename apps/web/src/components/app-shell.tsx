@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BookMarked, BookOpen, Brain, ChartNoAxesColumnIncreasing, ClipboardList, Flame, LayoutDashboard, MessageCircle, Moon, Settings, Sparkles, Sun, Target, Volume2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { api } from "@/lib/api-client";
 import { useDemo } from "@/lib/demo-store";
+import { useAuth } from "@/lib/auth";
 
 const links = [
   ["/dashboard","Dzisiaj",LayoutDashboard], ["/missions","Misje",Target], ["/conversation","Rozmowa",MessageCircle], ["/review","Powtórki",Brain],
@@ -13,10 +14,12 @@ const links = [
 ] as const;
 
 export function AppShell({children}:{children:React.ReactNode}){
-  const path=usePathname(); const {theme,setTheme}=useTheme(); const [account,setAccount]=useState({name:"Użytkownik",level:"A1",streak:0});
+  const path=usePathname(); const router=useRouter(); const {theme,setTheme}=useTheme(); const {ready,user}=useAuth(); const [account,setAccount]=useState({name:"Użytkownik",level:"A1",streak:0});
   const {learningLanguage,changeLearningLanguage,level:activeLanguageLevel}=useDemo();
-  useEffect(()=>{api.get<{learner:{name:string;level:string};stats:{streakDays:number}}>("/me/dashboard").then(data=>setAccount({name:data.learner.name,level:activeLanguageLevel,streak:data.stats.streakDays})).catch(()=>{})},[path,activeLanguageLevel]);
+  useEffect(()=>{if(ready&&!user)router.replace("/sign-in")},[ready,user,router]);
+  useEffect(()=>{if(!ready||!user)return;api.get<{learner:{name:string;level:string};stats:{streakDays:number}}>("/me/dashboard").then(data=>setAccount({name:data.learner.name,level:activeLanguageLevel,streak:data.stats.streakDays})).catch(()=>{})},[path,activeLanguageLevel,ready,user]);
   const {name,level,streak}=account;
+  if(!ready||!user)return <main className="app-bg" style={{minHeight:"100vh",display:"grid",placeItems:"center"}}><div className="card">Sprawdzam sesję…</div></main>;
   return <div className="app-shell app-bg">
     <aside className="sidebar">
       <Link className="brand" href="/dashboard"><span className="brand-mark"><Sparkles size={20}/></span>Fluentia</Link>

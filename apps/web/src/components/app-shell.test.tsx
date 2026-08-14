@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { DemoProvider } from "@/lib/demo-store";
 import { AppShell } from "./app-shell";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/dashboard" }));
+const navigation = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/dashboard", useRouter: () => ({ replace: navigation.replace }) }));
+vi.mock("@/lib/auth", () => ({ useAuth: () => ({ ready: true, user: { id: "test-user" } }) }));
 const theme = vi.hoisted(() => ({ setTheme: vi.fn() }));
 vi.mock("next-themes", () => ({ useTheme: () => ({ theme: "light", setTheme: theme.setTheme }) }));
 
